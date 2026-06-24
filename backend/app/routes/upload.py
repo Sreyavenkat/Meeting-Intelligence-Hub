@@ -1,16 +1,26 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from sqlalchemy.orm import Session
 import os
+
+from app.dependencies import get_db
+from app.models.meeting import Meeting
 
 
 router = APIRouter()
 
 
 BASE_DIR = os.path.dirname(
+
     os.path.dirname(
+
         os.path.dirname(
+
             os.path.dirname(__file__)
+
         )
+
     )
+
 )
 
 UPLOAD_DIR = os.path.join(
@@ -19,7 +29,6 @@ UPLOAD_DIR = os.path.join(
     "uploads"
 )
 
-print("UPLOAD DIR =", UPLOAD_DIR)
 
 os.makedirs(
     UPLOAD_DIR,
@@ -29,10 +38,10 @@ os.makedirs(
 
 @router.post("/upload")
 async def upload_transcript(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
 ):
 
-    # validate extension
     if not file.filename.endswith((".txt", ".vtt")):
         raise HTTPException(
             status_code=400,
@@ -59,9 +68,24 @@ async def upload_transcript(
     )
 
 
+    word_count = len(text.split())
+
+
+    meeting = Meeting(
+        filename=file.filename,
+        file_path=file_path,
+        word_count=word_count
+    )
+
+
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+
     return {
-        "filename": file.filename,
-        "word_count": len(text.split()),
-        "size_bytes": len(content),
+        "meeting_id": meeting.id,
+        "filename": meeting.filename,
+        "word_count": meeting.word_count,
         "status": "uploaded"
     }
