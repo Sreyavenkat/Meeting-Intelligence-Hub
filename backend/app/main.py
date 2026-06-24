@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.routes import upload
 
 
 app = FastAPI(
@@ -6,9 +7,14 @@ app = FastAPI(
 )
 
 
+app.include_router(
+    upload.router,
+    prefix="/api"
+)
+
+
 @app.get("/")
-def home():
+def root():
     return {
-        "status": "running",
-        "project": "Meeting Intelligence Hub"
+        "message": "Meeting Intelligence Hub API running"
     }
