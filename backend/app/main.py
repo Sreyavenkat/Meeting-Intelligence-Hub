@@ -8,6 +8,7 @@ from app.models import (
 )
 from app.routes import upload
 from app.routes import extraction
+from app.routes import export
 
 
 Base.metadata.create_all(bind=engine)
@@ -25,6 +26,11 @@ app.include_router(
 
 app.include_router(
     extraction.router,
+    prefix="/api"
+)
+
+app.include_router(
+    export.router,
     prefix="/api"
 )
 
