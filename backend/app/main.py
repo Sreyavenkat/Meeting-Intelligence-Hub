@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 
 from app.database import engine, Base
-from app.models import meeting
+from app.models import (
+    meeting,
+    decision,
+    action_item
+)
 from app.routes import upload
+from app.routes import extraction
 
 
 Base.metadata.create_all(bind=engine)
@@ -15,6 +20,11 @@ app = FastAPI(
 
 app.include_router(
     upload.router,
+    prefix="/api"
+)
+
+app.include_router(
+    extraction.router,
     prefix="/api"
 )
 

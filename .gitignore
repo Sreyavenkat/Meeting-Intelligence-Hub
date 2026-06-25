@@ -6,3 +6,5 @@ storage/uploads/
 storage/vector_store/
 
 .env
+*.db
+
