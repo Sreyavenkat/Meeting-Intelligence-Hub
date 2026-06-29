@@ -4,13 +4,14 @@ from app.database import engine, Base
 from app.models import (
     meeting,
     decision,
-    action_item
+    action_item,
+    sentiment
 )
 from app.routes import upload
 from app.routes import extraction
 from app.routes import export
 from app.routes import chat
-
+from app.routes import sentiment
 
 Base.metadata.create_all(bind=engine)
 
@@ -37,6 +38,11 @@ app.include_router(
 
 app.include_router(
     chat.router,
+    prefix="/api"
+)
+
+app.include_router(
+    sentiment.router,
     prefix="/api"
 )
 

@@ -1,5 +1,6 @@
 from ollama import chat
 import json
+import re
 
 
 MODEL = "llama3.1:8b"
@@ -17,13 +18,25 @@ Extract:
 1. Decisions
 2. Action Items
 
-Return ONLY valid JSON.
+Rules:
+- A decision is a finalized choice or agreement made by the participants.
+- A decision must represent something that was decided, approved, selected, or committed.
+- Do NOT include suggestions, ideas, goals, reasons, strategies, or discussions as decisions.
+- If there are no clear decisions, return an empty list.
+- If a statement is only a discussion, suggestion, question, or future possibility, do not include it.
+- An action item is a task assigned to a person.
+- Do not convert hypothetical statements, risks, concerns, or conditions into action items.
+- Only extract action items when someone explicitly agrees to do something or someone assigns a task.
+- Include deadlines if mentioned.
+- Do not create action items that are not explicitly assigned.
 
-Do not include:
-- explanations
-- markdown
-- code blocks
-- text before or after the JSON
+Return ONLY a valid JSON object.
+
+Do NOT:
+- add explanations
+- add markdown
+- use ```json
+- add text before or after the JSON
 
 Format:
 
@@ -47,6 +60,7 @@ Transcript:
 {transcript}
 """
 
+
     response = chat(
         model=MODEL,
         messages=[
@@ -57,16 +71,34 @@ Transcript:
         ]
     )
 
-    result = response["message"]["content"]
-    
+
+    result = response.message.content
+
+
     print("\n===== OLLAMA RESPONSE =====\n")
     print(result)
 
-    json_start = result.find("{")
-    json_text = result[json_start:]
 
-    #return result
+    # Extract JSON safely
+    match = re.search(
+        r"\{[\s\S]*\}",
+        result
+    )
 
-    #return json.loads(result)
 
-    return json.loads(json_text)
+    if not match:
+        raise ValueError(
+            "Ollama did not return valid JSON"
+        )
+
+
+    json_text = match.group(0)
+
+
+    try:
+        return json.loads(json_text)
+
+    except json.JSONDecodeError as e:
+        print("JSON parsing failed")
+        print(json_text)
+        raise e

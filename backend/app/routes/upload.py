@@ -4,6 +4,8 @@ import os
 
 from app.dependencies import get_db
 from app.models.meeting import Meeting
+from app.services.indexing_service import build_index 
+
 
 
 router = APIRouter()
@@ -81,6 +83,11 @@ async def upload_transcript(
     db.add(meeting)
     db.commit()
     db.refresh(meeting)
+
+    build_index(
+        transcript_text=text,
+        meeting_id=meeting.id
+    )
 
 
     return {
